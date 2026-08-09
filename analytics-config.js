@@ -1,0 +1,2 @@
+window.PICOR_GTM_ID = 'GTM-W92XXRSR';
+window.PICOR_ANALYTICS_DEBUG = false;

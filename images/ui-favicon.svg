@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="p-gradient" x1="0%" x2="100%" y1="50%" y2="50%">
+      <stop offset="0%" stop-color="#ff2a2f"/>
+      <stop offset="100%" stop-color="#e00011"/>
+    </linearGradient>
+    <linearGradient id="pepper-gradient" x1="35%" x2="65%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#ff2333"/>
+      <stop offset="100%" stop-color="#cc0012"/>
+    </linearGradient>
+    <linearGradient id="stem-gradient" x1="0%" x2="100%" y1="50%" y2="50%">
+      <stop offset="0%" stop-color="#55ad3d"/>
+      <stop offset="100%" stop-color="#2c8b2f"/>
+    </linearGradient>
+    <filter id="soft-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#soft-shadow)">
+    <path fill="url(#p-gradient)" d="M64 18h19c26 0 41 13 41 35S109 88 83 88H64V72h18c15 0 25-7 25-19S98 34 82 34H64z"/>
+    <path fill="url(#pepper-gradient)" d="M53 29c-6 0-10 5-10 11 0 12 3 24 3 37 0 22-7 39-21 51-5 5-2 11 5 9 16-7 28-20 36-39 8-19 11-43 9-62-1-4-4-7-8-7-5 0-9 0-14 0z"/>
+    <path fill="#ffffff" opacity="0.88" d="M49 41c-1 11 0 24-2 37-2 12-6 22-11 30 9-11 15-27 18-51 1-7 1-12 0-17-1-2-4-2-5 1z"/>
+    <path fill="url(#stem-gradient)" d="M52 10c7 5 12 14 12 25 0 1 1 2 2 2 9 1 16 5 21 12l-8 7c-4-5-8-8-13-9l-9 9c-7-8-16-11-29-8 6-6 14-10 24-11-1-11-5-18-12-24 5-2 9-2 12-3z"/>
+    <path fill="#eef6ea" d="M53 47c5-6 10-10 16-10 2 0 4 0 6 1-3 2-6 5-8 8-5-1-9 0-14 4z"/>
+  </g>
+</svg>

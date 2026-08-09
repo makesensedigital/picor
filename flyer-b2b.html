@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Flyer B2B — Picor Gochugaru</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Berkshire+Swash&display=swap" rel="stylesheet">
+  <script src="analytics-config.js"></script>
+  <script src="analytics.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #888;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 40px;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    /* ——— FLYER WRAPPER ——— */
+    .flyer {
+      width: 1080px;
+      height: 1350px;
+      position: relative;
+      overflow: hidden;
+      background: #1A1A1A;
+      flex-shrink: 0;
+    }
+
+    /* ——— FONDO HERO ——— */
+    .flyer__bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+    .flyer__bg img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.18;
+      filter: brightness(0.5) saturate(1.4);
+    }
+    /* Gradiente encima de la foto */
+    .flyer__overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background:
+        linear-gradient(180deg,
+          rgba(26,26,26,0.98) 0%,
+          rgba(26,26,26,0.75) 30%,
+          rgba(26,26,26,0.55) 55%,
+          rgba(26,26,26,0.92) 80%,
+          rgba(26,26,26,1)    100%
+        );
+    }
+
+    /* ——— ACENTO ROJO SUPERIOR ——— */
+    .flyer__top-bar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #C62828, #E8503A, #C62828);
+      z-index: 10;
+    }
+
+    /* ——— CONTENIDO ——— */
+    .flyer__content {
+      position: relative;
+      z-index: 5;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 54px 72px 54px;
+    }
+
+    /* HEADER */
+    .flyer__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo img {
+      height: 52px;
+      width: auto;
+    }
+    .logo__text {
+      font-family: 'Berkshire Swash', cursive;
+      font-size: 3rem;
+      line-height: 1;
+      letter-spacing: 0.01em;
+    }
+    .logo__text .i { color: #C62828; }
+    .logo__text .cor { color: #fff; }
+
+    .badge-premium {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      background: rgba(198,40,40,0.15);
+      border: 1px solid rgba(198,40,40,0.4);
+      border-radius: 60px;
+      color: #E8503A;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .badge-dot {
+      width: 7px; height: 7px;
+      background: #C62828;
+      border-radius: 50%;
+    }
+
+    /* HERO ZONE */
+    .flyer__hero {
+      flex: 1;
+      display: flex;
+      gap: 60px;
+      align-items: center;
+      margin-top: 40px;
+    }
+
+    .hero__left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .hero__tag {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #C62828;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .hero__tag::before {
+      content: '';
+      display: inline-block;
+      width: 32px; height: 2px;
+      background: #C62828;
+    }
+
+    .hero__title {
+      font-size: 3.8rem;
+      font-weight: 900;
+      line-height: 1.06;
+      color: #fff;
+      margin-bottom: 24px;
+    }
+    .hero__title em {
+      font-style: normal;
+      color: #C62828;
+    }
+
+    .hero__sub {
+      font-size: 1.12rem;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.75;
+      max-width: 420px;
+      margin-bottom: 36px;
+    }
+    .hero__sub strong { color: rgba(255,255,255,0.9); }
+
+    /* Pills de diferenciación */
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 40px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 18px;
+      border-radius: 60px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    .pill--red {
+      background: #C62828;
+      color: #fff;
+    }
+    .pill--outline {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.85);
+    }
+
+    /* ——— IMAGEN DEL PRODUCTO ——— */
+    .hero__right {
+      width: 340px;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .hero__product-wrap {
+      position: relative;
+    }
+    .hero__product-glow {
+      position: absolute;
+      width: 260px; height: 260px;
+      background: radial-gradient(circle, rgba(198,40,40,0.35) 0%, transparent 70%);
+      border-radius: 50%;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .hero__product-img {
+      width: 100%;
+      border-radius: 20px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+      position: relative;
+      z-index: 2;
+      display: block;
+    }
+    .sintacc-badge {
+      position: absolute;
+      bottom: -16px;
+      right: -16px;
+      z-index: 5;
+      background: #fff;
+      border-radius: 50%;
+      width: 86px; height: 86px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .sintacc-badge img {
+      width: 70px; height: 70px;
+      object-fit: contain;
+      border-radius: 50%;
+      display: block;
+    }
+
+    /* ——— DIVISOR ——— */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: rgba(255,255,255,0.08);
+      margin: 0;
+    }
+
+    /* ——— PARA QUIÉN ES ——— */
+    .flyer__audience {
+      padding-top: 32px;
+      padding-bottom: 32px;
+    }
+    .audience__label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #C62828;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .audience__label::before {
+      content: '';
+      display: inline-block;
+      width: 28px; height: 2px;
+      background: #C62828;
+    }
+    .audience__grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .audience__card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 20px 18px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .audience__card-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+    .audience__card-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 5px;
+    }
+    .audience__card-desc {
+      font-size: 0.73rem;
+      color: rgba(255,255,255,0.45);
+      line-height: 1.5;
+    }
+
+    /* ——— FORMATOS / OFERTA ——— */
+    .flyer__formats {
+      padding-top: 28px;
+      padding-bottom: 28px;
+    }
+    .formats__label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #C62828;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .formats__label::before {
+      content: '';
+      display: inline-block;
+      width: 28px; height: 2px;
+      background: #C62828;
+    }
+    .formats__row {
+      display: flex;
+      gap: 18px;
+    }
+    .format-box {
+      flex: 1;
+      padding: 20px 24px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .format-box--std {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .format-box--featured {
+      background: linear-gradient(135deg, rgba(198,40,40,0.2), rgba(198,40,40,0.08));
+      border: 1.5px solid #C62828;
+    }
+    .format-box__name {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #fff;
+    }
+    .format-box__sub {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.45);
+      margin-top: 3px;
+    }
+    .format-box__tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 60px;
+    }
+    .format-box--std .format-box__tag {
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.6);
+    }
+    .format-box--featured .format-box__tag {
+      background: #C62828;
+      color: #fff;
+    }
+
+    /* ——— FOOTER CTA ——— */
+    .flyer__footer {
+      padding-top: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .contact-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .contact-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.88rem;
+      color: rgba(255,255,255,0.6);
+    }
+    .contact-row strong {
+      color: rgba(255,255,255,0.9);
+      font-size: 0.92rem;
+    }
+    .contact-icon {
+      width: 32px; height: 32px;
+      background: rgba(198,40,40,0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 40px;
+      background: #C62828;
+      color: #fff;
+      border-radius: 60px;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-decoration: none;
+      white-space: nowrap;
+      box-shadow: 0 8px 30px rgba(198,40,40,0.4);
+    }
+    .cta-btn svg {
+      width: 20px; height: 20px;
+    }
+
+    .footer__badges {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-end;
+    }
+    .fbadge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 60px;
+      font-size: 0.73rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.55);
+    }
+
+    /* ——— ACENTO INFERIOR ——— */
+    .flyer__bottom-bar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, #C62828 40%, #E8503A 60%, transparent);
+      z-index: 10;
+    }
+
+    /* ——— PRINT / EXPORT HINT ——— */
+    .export-hint {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 60px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 500;
+      pointer-events: none;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W92XXRSR" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+  <div class="flyer">
+    <!-- Barras decorativas -->
+    <div class="flyer__top-bar"></div>
+    <div class="flyer__bottom-bar"></div>
+
+    <!-- Fondo -->
+    <div class="flyer__bg">
+      <img src="images/campo-surcos.jpeg" alt="">
+    </div>
+    <div class="flyer__overlay"></div>
+
+    <!-- Contenido -->
+    <div class="flyer__content">
+
+      <!-- HEADER -->
+      <header class="flyer__header">
+        <div class="logo">
+          <img src="images/logo-pepper.svg" alt="">
+          <span class="logo__text"><span class="i">i</span><span class="cor">cor</span></span>
+        </div>
+        <span class="badge-premium">
+          <span class="badge-dot"></span>
+          Gochugaru Argentino Premium
+        </span>
+      </header>
+
+      <!-- HERO -->
+      <div class="flyer__hero">
+        <div class="hero__left">
+          <div class="hero__tag">Propuesta Comercial B2B</div>
+          <h1 class="hero__title">
+            El Gochugaru<br>
+            que tu negocio<br>
+            <em>estaba buscando</em>
+          </h1>
+          <p class="hero__sub">
+            Ají coreano <strong>cultivado en Salta</strong>, de semilla 100% coreana certificada.
+            Fresco, consistente y <strong>SIN TACC</strong> — lo que el importado chino no puede ofrecerte.
+          </p>
+
+          <!-- Pills -->
+          <div class="pills">
+            <span class="pill pill--red">🇰🇷 Semilla Coreana</span>
+            <span class="pill pill--outline">🇦🇷 Cultivado en Salta</span>
+            <span class="pill pill--red">✓ Certificado SIN TACC</span>
+            <span class="pill pill--outline">📋 Ficha técnica disponible</span>
+            <span class="pill pill--outline">🚚 Entrega directa CABA</span>
+          </div>
+        </div>
+
+        <!-- Producto -->
+        <div class="hero__right">
+          <div class="hero__product-wrap">
+            <div class="hero__product-glow"></div>
+            <img class="hero__product-img" src="images/producto-detalle.jpeg" alt="Gochugaru Picor">
+            <div class="sintacc-badge">
+              <img src="images/sin-tacc-logo.jpg" alt="Sin TACC">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- PARA QUIÉN -->
+      <div class="flyer__audience">
+        <div class="audience__label">Canales ideales</div>
+        <div class="audience__grid">
+          <div class="audience__card">
+            <div class="audience__card-icon">🥗</div>
+            <div class="audience__card-title">Dietéticas</div>
+            <div class="audience__card-desc">Producto SIN TACC certificado, diferencial en góndola</div>
+          </div>
+          <div class="audience__card">
+            <div class="audience__card-icon">🍜</div>
+            <div class="audience__card-title">Restaurantes</div>
+            <div class="audience__card-desc">Consistencia de lote a lote para estandarizar recetas</div>
+          </div>
+          <div class="audience__card">
+            <div class="audience__card-icon">🥬</div>
+            <div class="audience__card-title">Productores de Kimchi</div>
+            <div class="audience__card-desc">Color vibrante y frescura que el importado no da</div>
+          </div>
+          <div class="audience__card">
+            <div class="audience__card-icon">🚚</div>
+            <div class="audience__card-title">Distribuidores</div>
+            <div class="audience__card-desc">Producto único en Argentina con demanda K-Food en crecimiento</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- FORMATOS -->
+      <div class="flyer__formats">
+        <div class="formats__label">Formatos gastronómicos</div>
+        <div class="formats__row">
+          <div class="format-box format-box--std">
+            <div>
+              <div class="format-box__name">Paquete 750 g</div>
+              <div class="format-box__sub">Ideal para rotación media</div>
+            </div>
+            <span class="format-box__tag">Disponible</span>
+          </div>
+          <div class="format-box format-box--featured">
+            <div>
+              <div class="format-box__name">Paquete 1 kg</div>
+              <div class="format-box__sub">Mejor precio por kilo · Alta rotación</div>
+            </div>
+            <span class="format-box__tag">Recomendado</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- FOOTER CTA -->
+      <footer class="flyer__footer">
+        <div class="contact-info">
+          <div class="contact-row">
+            <span class="contact-icon">📱</span>
+            <div><strong>+54 9 11 3430-0029</strong></div>
+          </div>
+          <div class="contact-row">
+            <span class="contact-icon">📧</span>
+            <div><strong>info@picor.com.ar</strong></div>
+          </div>
+          <div class="contact-row">
+            <span class="contact-icon">🌐</span>
+            <div>picor.com.ar</div>
+          </div>
+        </div>
+
+        <a class="cta-btn" href="https://wa.me/5491134300029" target="_blank" rel="noopener noreferrer" data-analytics-event="cta_click" data-analytics-label="flyer_whatsapp">
+          Consultar precio y disponibilidad
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+
+        <div class="footer__badges">
+          <span class="fbadge">✓ RNPA y documentación completa</span>
+          <span class="fbadge">🇦🇷 Industria Argentina</span>
+          <span class="fbadge">📰 Publicado en Clarín Rural</span>
+        </div>
+      </footer>
+
+    </div><!-- /content -->
+  </div><!-- /flyer -->
+
+  <p class="export-hint">Para exportar: F12 → captura de nodo, o imprimí como PDF / captura de pantalla</p>
+
+</body>
+</html>
