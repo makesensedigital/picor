@@ -18,7 +18,7 @@ running the adoption. None of it has been confirmed by a person.
 |---|---|---|---|
 | Canonical domain | `picor.com.ar`, declared in `<link rel="canonical">` and the sitemap | Juan Torresel | before 2026-04 |
 | Hosting, and what it puts out of reach | **Never taken as a decision.** Apache shared hosting at `200.58.111.96`, deploy by manual upload. See OPEN-03 | — | — |
-| Primary conversion | **Never taken.** The site fires `generate_lead` on a departure to WhatsApp, which is an intent recorded as an outcome. See FIX-05 / OPEN-02 | — | — |
+| Primary conversion | **Never taken.** The site fires `generate_lead` on a departure to WhatsApp, which is an intent recorded as an outcome. See FIX-04 / OPEN-02 | — | — |
 | Copy language and register | Spanish (es-AR), informal *vos*. Consistent throughout, evidently deliberate | Juan Torresel | before 2026-04 |
 
 ### The six irreversibles
@@ -33,7 +33,7 @@ late does not recover what was lost.
 | 2 | Consent — jurisdiction, decision, **and what would change it** | **Unanswered.** Tags load unconditionally; no privacy statement exists. OPEN-01 | Juan Torresel |
 | 3 | Canonical identity: domain, mailbox, brand | Answered: `picor.com.ar`, `info@picor.com.ar`, Picor | Juan Torresel |
 | 4 | Retired URLs and the redirect plan | **Unanswered**, and probably vacuous — no evidence of a predecessor site. Confirm before assuming it is nothing | Juan Torresel |
-| 5 | Sender authentication (if there will be email) | **Unanswered.** No email is sent by the site today; the mailbox is a `mailto:` only. Becomes urgent the day a mailing list is built — see FIX-03 | Juan Torresel |
+| 5 | Sender authentication (if there will be email) | **Unanswered.** No email is sent by the site today; the mailbox is a `mailto:` only. Becomes urgent the day a mailing list is built — see OPEN-02 | Juan Torresel |
 | 6 | Conversion receiver, with a tested reply | **Unanswered, and the form is live anyway.** It persists nothing. FIX-03 / OPEN-02 | Juan Torresel |
 
 ### The measurement contract
@@ -53,7 +53,7 @@ including everyone who then closed it — a headline number inflated by a margin
 
 **The four months already recorded cannot be fixed.** Renaming the event today does not reclassify
 the history, and there is no second source to reconstruct it from. That is why measurement is an
-irreversible and why FIX-05 changes the name but the baseline records the gap.
+irreversible and why FIX-04 changes the name but the baseline records the gap.
 
 ---
 
@@ -95,7 +95,7 @@ The specific mistakes already identified for *this* site.
 - **Do not add a cookie banner before the consent decision is taken** (OPEN-01). A banner that
   changes nothing about when tags load is decoration, and it is worse than none: it asserts a
   control that does not exist.
-- **Do not allowlist the font origins in `config.js`** to clear DEBT-03. Self-hosting the typefaces
+- **Do not allowlist the font origins in `config.js`** to clear DEBT-04. Self-hosting the typefaces
   removes the finding outright and is faster; allowlisting converts a finding into a decision nobody
   took.
 - **Do not compress the three 8-10 MB PNGs by re-saving them as PNG.** They are photographs. The

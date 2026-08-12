@@ -72,11 +72,29 @@ No cambies el nombre exacto de esas claves. Asi llegan desde el sitio.
 5. En `Event name`, escribe esta regex:
 
 ```text
-^(cta_click|file_download|press_click|contact_click|social_click|generate_lead)$
+^(cta_click|file_download|press_click|contact_click|social_click|messaging_intent)$
 ```
 
 6. Marca la opcion para usar regex si la interfaz la muestra.
 7. Guarda.
+
+> **CAMBIO DE NOMBRE DE EVENTO - 2026-08-11, hay que actualizar el contenedor.**
+>
+> El evento `generate_lead` se renombro a `messaging_intent`. El motivo esta en el Handbook
+> §26: un evento se nombra por el momento que se puede *verificar*. Ese evento se dispara
+> cuando el visitante SALE hacia WhatsApp: lo vemos irse y nunca sabemos si llego. Llamarlo
+> `generate_lead` reportaba una conversion con un margen de error que nadie puede estimar.
+>
+> **El trigger de arriba filtra por nombre exacto.** Hasta que publiques el contenedor con la
+> regex nueva, esos eventos dejan de llegar a GA4. Los dos cambios - subir el sitio y publicar
+> el contenedor - van juntos.
+>
+> Las propiedades (`lead_type`, `client_type`) no cambiaron, asi que las variables de Data Layer
+> del Paso 2 siguen funcionando sin tocarlas.
+>
+> **Los cuatro meses ya registrados como `generate_lead` no se pueden reclasificar.** No hay otra
+> fuente para reconstruirlos. En GA4 quedan como estan; a partir del cambio, la serie nueva es la
+> que se puede leer.
 
 ### Paso 4: crear una etiqueta unica para enviar todos esos eventos a GA4
 
@@ -116,7 +134,7 @@ Con una sola etiqueta te llevas todos los eventos del sitio a GA4.
    - `press_click`
    - `contact_click`
    - `social_click`
-   - `generate_lead`
+   - `messaging_intent`
 5. Haz clic sobre cada evento y verifica que dispare la etiqueta `GA4 - Event - Picor custom events`.
 6. Revisa que los parametros lleguen completos.
 
@@ -135,15 +153,27 @@ Con una sola etiqueta te llevas todos los eventos del sitio a GA4.
 
 ## Como marcar conversiones o key events en GA4
 
-Para este sitio, lo mas importante es `generate_lead`.
+**Este sitio no tiene ninguna conversion que pueda marcarse como key event, y eso no es un
+descuido: es lo que hay.** Handbook §26 lo dice sin rodeos - un evento se nombra por el momento
+que se puede *verificar*, y lo que pasa fuera del sitio (en WhatsApp, en un scheduler, en una
+pagina de pago) se puede ver **partir** y nunca **llegar**.
 
-1. Espera a que GA4 reciba al menos un `generate_lead`.
-2. En GA4, entra a `Admin`.
-3. Abre `Events`.
-4. Busca `generate_lead`.
-5. Marcala como `Key event`.
+`messaging_intent` es exactamente eso: una salida. Marcarlo como key event produce un numero de
+conversion inflado por un margen que nadie puede estimar, presentado con la misma confianza que
+uno real. **Es una intencion, se llama asi, y no se designa como la conversion principal.**
 
-Si despues quieres medir una conversion mas agresiva, tambien puedes marcar `contact_click` como key event, pero normalmente conviene dejar como conversion real solo `generate_lead`.
+Una conversion real de este sitio existe el dia que haya un receptor que **persista** la consulta
+en un sistema del negocio antes de cualquier salto a WhatsApp (esta registrado como OPEN-02 en
+`docs/open-definitions.md`). Ese dia el evento se llama `contact_form_submitted`, se dispara
+contra la respuesta del receptor, y **ese** se marca como key event.
+
+Mientras tanto, lo util y honesto:
+
+1. Marca `messaging_intent` como key event **solo si** entendes que mide intencion, no cierre, y
+   lo reportas con ese nombre.
+2. Leelo siempre **en par** con el volumen de conversaciones reales que llegan a WhatsApp. La
+   diferencia entre los dos es la tasa de abandono en el salto, y es la unica forma de estimar
+   cuanto sobra en el numero de arriba.
 
 ## Mapa exacto de eventos del sitio
 
@@ -231,7 +261,10 @@ Parametros enviados:
 - `page_title`
 - `page_location`
 
-### 6. `generate_lead`
+### 6. `messaging_intent`
+
+**Intencion, no resultado.** Se dispara cuando el visitante sale hacia WhatsApp. Antes se llamaba
+`generate_lead`; ver la nota del Paso 3.
 
 Se dispara en dos casos:
 
@@ -262,10 +295,13 @@ Parametros enviados:
 
 Si quieres un minimo operativo y util, revisa estas metricas:
 
-1. `generate_lead` como conversion principal.
+1. `messaging_intent` como **intencion de contacto**, nunca como conversion cerrada.
 2. `file_download` para medir interes comercial serio.
 3. `cta_click` segmentado por `event_label` para ver que CTA empuja mas.
-4. `client_type` dentro de `generate_lead` para entender si te llegan mas restaurantes, distribuidores o foodies.
+4. `client_type` dentro de `messaging_intent` para entender si te llegan mas restaurantes, distribuidores o foodies.
+5. La diferencia entre `messaging_intent` y las conversaciones que realmente abris en WhatsApp.
+   Ese numero no esta en GA4 y hay que contarlo a mano, pero es el unico que dice cuanto de lo de
+   arriba se perdio en el salto.
 
 ## Ejemplo de lectura practica
 
@@ -273,14 +309,14 @@ Si en GA4 ves esto:
 
 - muchos `cta_click`
 - muchos `contact_click`
-- pocos `generate_lead`
+- pocos `messaging_intent`
 
 Entonces el problema no esta en atraccion sino en el cierre del contacto o en el flujo de WhatsApp.
 
 Si ves esto:
 
 - muchos `file_download`
-- `generate_lead` con `client_type=restaurante`
+- `messaging_intent` con `client_type=restaurante`
 
 Entonces la propuesta B2B esta funcionando bien y la ficha tecnica probablemente esta ayudando al cierre.
 

@@ -843,9 +843,10 @@
 
           <div class="form-success" id="formSuccess">
             <div class="form-success__icon">✅</div>
-            <div class="form-success__title">¡Consulta enviada!</div>
-            <p class="form-success__desc">Se abrió WhatsApp con tu mensaje. Te respondemos en menos de 24 horas.</p>
-            <button class="form-success__back" id="formSuccessBack">Enviar otra consulta</button>
+            <div class="form-success__title" id="formSuccessTitle">Ya casi</div>
+            <p class="form-success__desc" id="formSuccessDesc">Abrimos WhatsApp con tu mensaje escrito. <strong>Tocá enviar en WhatsApp</strong> para que nos llegue — hasta que lo hagas, no lo recibimos.</p>
+            <a class="form-success__fallback" id="formSuccessLink" target="_blank" rel="noopener noreferrer" hidden>Abrir WhatsApp con mi mensaje</a>
+            <button class="form-success__back" id="formSuccessBack">Escribir otra consulta</button>
           </div>
 
           <form id="contactForm" action="#" method="POST">
@@ -880,6 +881,11 @@
               <label for="mensaje">Mensaje</label>
               <textarea id="mensaje" name="mensaje" placeholder="Contanos qué necesitás: cantidad estimada, frecuencia de compra, preguntas sobre el producto..." rows="4"></textarea>
             </div>
+            <p class="form-legal">
+              Al enviar, se abre WhatsApp con tus datos ya escritos y el mensaje sale desde tu
+              cuenta cuando lo enviás. Leé cómo tratamos esa información en nuestra
+              <a href="/privacy.html">Política de Privacidad</a>.
+            </p>
             <div class="form-submit">
               <button type="submit" class="btn btn--primary" id="submitForm">
                 Enviar Consulta
@@ -941,7 +947,9 @@
         </div>
       </div>
       <div class="footer__bottom">
-        <span>© 2026 Picor — Gochugaru Argentino. Todos los derechos reservados.</span>
+        <span>© 2026 Picor — Gochugaru Argentino. Todos los derechos reservados.
+          <span class="footer__legal"><a href="/privacy.html">Política de Privacidad</a></span>
+        </span>
         <div class="footer__badges">
           <span class="footer__badge"><img src="images/ui-badge-sin-tacc.jpg" alt="Sin TACC" style="width: 18px; height: 18px; object-fit: contain; border-radius: 50%;"> SIN TACC</span>
           <span class="footer__badge">🇦🇷 Industria Argentina</span>
@@ -1127,14 +1135,40 @@
       texto += `*Tipo de cliente:* ${tipoTexto}\n`;
       if (mensaje) texto += `\n*Mensaje:*\n${mensaje}`;
 
-      window.trackPicorEvent('generate_lead', {
+      // FIX-04 — Handbook §26: un evento se nombra por el momento que se puede verificar.
+      // Esto es una SALIDA hacia WhatsApp: la podemos ver irse y nunca ver si llegó. Se llamaba
+      // `generate_lead`, que es el nombre de un resultado, y durante cuatro meses infló la
+      // conversión con un margen que nadie puede estimar. Esa historia no se puede recalcular.
+      // IMPORTANTE: el trigger de GTM filtra por nombre de evento. Ver GTM_SETUP.md.
+      window.trackPicorEvent('messaging_intent', {
         lead_type: 'contact_form',
         client_type: tipoCliente.value || 'desconocido',
       });
 
-      window.open(`https://wa.me/5491134300029?text=${encodeURIComponent(texto)}`, '_blank');
+      // FIX-03 — Handbook §26: un estado de éxito se muestra solo por algo que realmente pasó.
+      // `window.open` devuelve null cuando el navegador lo bloquea, que es exactamente lo que
+      // pasa en el navegador embebido de Instagram, por donde llega buena parte de esta visita.
+      // Antes mostrábamos "¡Consulta enviada!" igual: el visitante se iba creyendo que había
+      // terminado mientras el negocio no recibía nada.
+      const waUrl = `https://wa.me/5491134300029?text=${encodeURIComponent(texto)}`;
+      const waWindow = window.open(waUrl, '_blank');
 
-      // Mostrar feedback y ocultar formulario
+      const successTitle = document.getElementById('formSuccessTitle');
+      const successDesc = document.getElementById('formSuccessDesc');
+      const successLink = document.getElementById('formSuccessLink');
+
+      successLink.href = waUrl;
+
+      if (waWindow) {
+        successTitle.textContent = 'Ya casi';
+        successDesc.innerHTML = 'Abrimos WhatsApp con tu mensaje escrito. <strong>Tocá enviar en WhatsApp</strong> para que nos llegue — hasta que lo hagas, no lo recibimos.';
+        successLink.hidden = true;
+      } else {
+        successTitle.textContent = 'No pudimos abrir WhatsApp';
+        successDesc.innerHTML = 'Tu navegador bloqueó la ventana, así que <strong>tu mensaje todavía no salió</strong>. Tocá el botón de abajo para abrirlo con el texto ya escrito.';
+        successLink.hidden = false;
+      }
+
       contactForm.style.display = 'none';
       formSuccess.classList.add('visible');
     });
@@ -1155,12 +1189,20 @@
         return;
       }
 
-      window.trackPicorEvent('generate_lead', {
+      // FIX-04 — misma razón que arriba: es una salida, no un alta. No existe lista de correo
+      // a la que dar de alta a nadie (OPEN-02), así que `generate_lead` describía algo que el
+      // negocio no tiene.
+      window.trackPicorEvent('messaging_intent', {
         lead_type: 'store_waitlist',
       });
 
       const msg = encodeURIComponent(`Quiero que me avisen sobre la tienda online\n\nEmail: ${mail}`);
-      window.open(`https://wa.me/5491134300029?text=${msg}`, '_blank');
+      const waitlistUrl = `https://wa.me/5491134300029?text=${msg}`;
+
+      // FIX-03 — si el navegador bloquea la ventana, nada lo anuncia. Se lo decimos.
+      if (!window.open(waitlistUrl, '_blank')) {
+        alert('Tu navegador bloqueó la ventana de WhatsApp, así que el mensaje no salió. Escribinos directamente y te avisamos cuando abra la tienda.');
+      }
     });
   </script>
 
