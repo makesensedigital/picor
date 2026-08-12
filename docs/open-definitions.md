@@ -66,17 +66,57 @@ site or unbinds the domain:
    account claiming the domain.
 5. Move DNS. Confirm the `www` variant is handled — DEBT-09 cannot be fixed after this point,
    because Pages issues no redirects at all.
-6. Commit `CNAME`. **In review** — branch `chore/bind-custom-domain`. Publishing from a workflow
-   without it unbinds the custom domain silently: the site keeps working on the github.io address
-   and `picor.com.ar` stops resolving.
-7. Only then stop the manual upload.
+6. ~~Commit `CNAME`.~~ **Done 2026-08-11**, PR #1. The file must live in the published artifact,
+   not only in the Pages settings screen: with workflow-based publishing it is the artifact that
+   sustains the binding, and a deploy without it can drop the custom domain silently.
+7. **Stop the manual upload.** Not done — pending the certificate below.
 
-> **Do not merge step 6 before step 5 is true.** Checked 2026-08-11 against the authoritative
-> nameserver, `ns3.hostmar.com` still answers `picor.com.ar` with `200.58.111.96` — the old Apache
-> host. That is the zone itself, not a caching delay. Merging `CNAME` while that holds points Pages
-> at a domain that resolves elsewhere: the github.io copy starts redirecting to a site with an
-> expired certificate, and GitHub cannot issue a certificate for a domain that does not point at
-> it. The one-line check is in the pull request.
+### Where the migration actually stands (2026-08-12)
+
+GitHub Pages **is** serving this site for `picor.com.ar`. Verified by resolving past the local
+cache:
+
+```
+$ curl -sSI --resolve picor.com.ar:443:185.199.108.153 https://picor.com.ar/
+HTTP/1.1 200 OK
+Server: GitHub.com
+```
+
+What is **not** done is HTTPS. GitHub's own health check
+(`GET /repos/makesensedigital/picor/pages/health`) reports:
+
+```
+is_a_record                    True
+is_pointed_to_github_pages_ip  True
+is_served_by_pages             True
+is_valid                       True
+is_https_eligible              False
+https_error                    peer_failed_verification
+```
+
+### The AAAA record is the blocker, and it is the trap worth writing down
+
+The `A` records were moved to GitHub. **The `AAAA` record was not** — the apex still carries
+`2800:6c0:2::c:271`, the old Apache host, whose certificate expired on 2026-07-09.
+
+So GitHub's verification reaches the domain over IPv6, lands on Apache, fails to verify the expired
+certificate, and refuses to issue one. `peer_failed_verification` is that, exactly.
+
+**This is the failure mode that looks like success.** Everyone testing from an IPv4 network sees the
+new site; everyone on IPv6 sees the old one. Nothing reports the split, and in this architecture
+nothing ever would — there is no server to notice it.
+
+Remaining, all at the registrar (`hostmar`), none of it code:
+
+- **Delete the apex `AAAA`** pointing at `2800:6c0:2::c:271`, or replace it with GitHub's. This is
+  what unblocks the certificate.
+- **Add the two missing `A` records.** Only `185.199.108.153` and `185.199.109.153` are present;
+  `.110.153` and `.111.153` are not, so two of the four edges are unused.
+- Once the certificate issues, **turn on Enforce HTTPS** — that closes the second half of FIX-01,
+  the plain-HTTP-served-200 finding.
+
+Until then **FIX-01 stays open.** The certificate that expired on 9 July is still what an IPv6
+visitor is offered.
 
 **Correction to the order originally written here (2026-08-11).** The first version said to commit
 `CNAME` *in the same change that adds the publish job*. That is wrong and would have made step 3
