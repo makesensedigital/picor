@@ -94,29 +94,39 @@ is_https_eligible              False
 https_error                    peer_failed_verification
 ```
 
-### The AAAA record is the blocker, and it is the trap worth writing down
+### The AAAA record was the blocker — resolved at the registrar, now waiting on cache
 
-The `A` records were moved to GitHub. **The `AAAA` record was not** — the apex still carries
-`2800:6c0:2::c:271`, the old Apache host, whose certificate expired on 2026-07-09.
+For several hours the `A` records pointed at GitHub while the `AAAA` still carried
+`2800:6c0:2::c:271`, the old Apache host with the certificate that expired on 2026-07-09. GitHub's
+verification reached the domain over IPv6, landed there, could not verify that certificate and
+refused to issue one — `peer_failed_verification`, with `is_non_github_pages_ip_present: true`
+naming the cause.
 
-So GitHub's verification reaches the domain over IPv6, lands on Apache, fails to verify the expired
-certificate, and refuses to issue one. `peer_failed_verification` is that, exactly.
+**That is the failure mode that looks like success**, and it is the one worth remembering from this
+migration: everyone testing from an IPv4 network saw the new site while everyone on IPv6 saw the
+old one. Nothing reported the split, and in this architecture nothing ever would — there is no
+server to notice. It was found by querying the authoritative nameserver directly rather than
+trusting a resolver, and by reading GitHub's health endpoint instead of the green check.
 
-**This is the failure mode that looks like success.** Everyone testing from an IPv4 network sees the
-new site; everyone on IPv6 sees the old one. Nothing reports the split, and in this architecture
-nothing ever would — there is no server to notice it.
+**The zone is now correct** (verified against `ns3.hostmar.com`):
 
-Remaining, all at the registrar (`hostmar`), none of it code:
+```
+A     185.199.108.153  .109.153  .110.153  .111.153
+AAAA  2606:50c0:8000::153  ::8001::153  ::8002::153  ::8003::153
+```
 
-- **Delete the apex `AAAA`** pointing at `2800:6c0:2::c:271`, or replace it with GitHub's. This is
-  what unblocks the certificate.
-- **Add the two missing `A` records.** Only `185.199.108.153` and `185.199.109.153` are present;
-  `.110.153` and `.111.153` are not, so two of the four edges are unused.
-- Once the certificate issues, **turn on Enforce HTTPS** — that closes the second half of FIX-01,
-  the plain-HTTP-served-200 finding.
+All four of each, matching what `makesensedigital.github.io` resolves to.
 
-Until then **FIX-01 stays open.** The certificate that expired on 9 July is still what an IPv6
-visitor is offered.
+**What remains is cache, not configuration.** Public resolvers still hold the old `AAAA`; the zone
+publishes a 4-hour TTL and roughly that much was left when this was written. When it expires
+GitHub's check passes on its own and the certificate is issued — no further action at the registrar.
+
+The last step is then one click or one API call: **turn on Enforce HTTPS**. That closes the second
+half of FIX-01, the plain-HTTP-served-200 finding, and after it the certificate renews itself and
+stops being something anyone has to remember.
+
+Until the certificate issues and Enforce HTTPS is on, **FIX-01 stays open** — an IPv6 visitor
+holding a stale cache is still offered the certificate that expired on 9 July.
 
 **Correction to the order originally written here (2026-08-11).** The first version said to commit
 `CNAME` *in the same change that adds the publish job*. That is wrong and would have made step 3
