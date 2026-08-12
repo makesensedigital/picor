@@ -40,7 +40,10 @@
 #    image debt is paid. This is the only non-blocking step here and it is not a suppression — the
 #    check runs, the output is read, and nothing is silenced.
 #
-# 4. NO `lighthouserc.json` FLOORS FILE YET. Autorun uses its defaults until the floors are set
+# 4. ~~NO `lighthouserc.json`.~~ **Resolved 2026-08-12**, together with deviation 3. One floor is a
+#    warning rather than an error - largest-contentful-paint - and the file says why in place: at
+#    6.8s it fails any honest floor today, and the largest remaining cause is the render-blocking
+#    third-party font stylesheet, which is DEBT-04. Autorun uses its defaults until the floors are set
 #    with the same commit that makes step 3 blocking. Part of DEBT-14, whose trigger has now
 #    fired - so the step prints its scores, and the floors come from a measurement.
 # ---------------------------------------------------------------------------------------------
@@ -164,21 +167,19 @@ jobs:
             --verbosity error
 
       - name: Mobile performance and accessibility thresholds
-        # STILL NON-BLOCKING - deviation 3 at the top of this file - but no longer silent.
+        # BLOCKING as of 2026-08-12. DEBT-14 is paid.
         #
-        # It used to run with --upload.target=filesystem and print nothing beyond "Done running
-        # autorun". That is worse than useless: a number nobody can see cannot move, and a step
-        # that produces one looks like coverage while providing none.
+        # The floors live in lighthouserc.json, set from the median of three measured CI runs
+        # rather than guessed, each with the reason it sits where it does. A loosened floor shows
+        # up in a diff and has to be argued for, which is the whole point of putting them in a
+        # file instead of a flag.
         #
-        # DEBT-14's trigger (the image work landing) has now fired, so the floors are next. They
-        # get set from a MEASURED score rather than a guessed one, which means the first job is
-        # making the score visible. Read it from this step's output, put the floors just under it
-        # in lighthouserc.json, and delete the continue-on-error below in the same commit.
+        # It still prints the scores. A gate that only says pass or fail teaches nothing about
+        # which direction the number is moving.
         if: ${{ !cancelled() }}
-        continue-on-error: true
         run: |
           set -uo pipefail
-          npx --yes @lhci/cli@0.14.0 autorun --collect.url=http://127.0.0.1:8080/ --upload.target=filesystem
+          npx --yes @lhci/cli@0.14.0 autorun
           node -e '
             const fs = require("fs");
             const dir = ".lighthouseci";
@@ -199,8 +200,7 @@ jobs:
               if (a) console.log("  " + k.padEnd(28) + a.displayValue);
             }
             console.log("");
-            console.log("  DEBT-14: set lighthouserc.json floors just under these, then remove");
-            console.log("  continue-on-error from this step, in the same commit.");
+            console.log("  Floors are in lighthouserc.json, with the reason for each.");
             console.log("");
           '
 
