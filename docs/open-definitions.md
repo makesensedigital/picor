@@ -56,7 +56,9 @@ site or unbinds the domain:
    first and none were found; nothing had ever been deleted from it either.
 2. ~~Enable Pages, publishing from GitHub Actions.~~ **Done 2026-08-11** — `build_type: workflow`,
    publishing to `https://makesensedigital.github.io/picor/`.
-3. **Add the publish job and verify the `github.io` copy renders.** Root-absolute paths
+3. ~~**Add the publish job and verify the `github.io` copy renders.**~~ **Done 2026-08-11** — gate
+   and publish both green; `/` and `/privacy.html` return 200 and `/no-existe-xyz` returns the new
+   `404.html`. Root-absolute paths
    (`/favicon.ico`, `/privacy.html`, `/site.webmanifest`) will 404 there because a project page is
    served under `/picor/`. That resolves itself when the custom domain binds and the site is at a
    root again — it is an artefact of verifying on a subpath, not a defect.
@@ -64,9 +66,17 @@ site or unbinds the domain:
    account claiming the domain.
 5. Move DNS. Confirm the `www` variant is handled — DEBT-09 cannot be fixed after this point,
    because Pages issues no redirects at all.
-6. Commit `CNAME`. Publishing from a workflow without it unbinds the custom domain silently: the
-   site keeps working on the github.io address and `picor.com.ar` stops resolving.
+6. Commit `CNAME`. **In review** — branch `chore/bind-custom-domain`. Publishing from a workflow
+   without it unbinds the custom domain silently: the site keeps working on the github.io address
+   and `picor.com.ar` stops resolving.
 7. Only then stop the manual upload.
+
+> **Do not merge step 6 before step 5 is true.** Checked 2026-08-11 against the authoritative
+> nameserver, `ns3.hostmar.com` still answers `picor.com.ar` with `200.58.111.96` — the old Apache
+> host. That is the zone itself, not a caching delay. Merging `CNAME` while that holds points Pages
+> at a domain that resolves elsewhere: the github.io copy starts redirecting to a site with an
+> expired certificate, and GitHub cannot issue a certificate for a domain that does not point at
+> it. The one-line check is in the pull request.
 
 **Correction to the order originally written here (2026-08-11).** The first version said to commit
 `CNAME` *in the same change that adds the publish job*. That is wrong and would have made step 3
