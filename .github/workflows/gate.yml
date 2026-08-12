@@ -1,0 +1,186 @@
+# The delivery gate — Handbook §26.
+#
+# Adapted from templates/landing/.github/workflows/gate.yml at handbook v3.7.1. Every deviation from
+# that template is named below with its reason. §20 and §26 both forbid dropping a stage silently;
+# a stage that does not run here says so and says why.
+#
+# §20's five stages are declared INAPPLICABLE for this class, by name and with the reason — there is
+# no build, no type system, no unit suite and no dependency tree here. This replaces them.
+#
+# WHY EVERY CHECK RUNS EVEN AFTER ONE FAILS
+#
+# A report that stops at the first line is a worse input than one that lists everything wrong at
+# once. A lint's output is input to the next turn (§20). So every step is `if: '!cancelled()'`, and
+# `gate` is the single thing to require in branch protection.
+#
+# ---------------------------------------------------------------------------------------------
+# DEVIATIONS FROM THE TEMPLATE — all four, with reasons
+#
+# 1. NO `build-derived.mjs --check` STEP. `facts.js` and the derivation were not adopted: this site
+#    holds its business facts in three independent places (markup, JSON-LD, llms.txt) and migrating
+#    to a single source rewrites `index.html`. Recorded as DEBT-04, not dropped.
+#
+# 2. NO `publish` JOB **YET**, and this is a sequencing decision rather than an open one. The site
+#    is served today by Apache on shared hosting with a manual upload, so §26's "the pipeline is the
+#    publication origin" is UNMET. Moving to GitHub Pages HAS BEEN DECIDED (2026-08-11, Juan
+#    Torresel) — see OPEN-03, which records what that choice puts out of reach.
+#
+#    The job lands with the migration, not before it. Adding it now would publish a second live copy
+#    at the github.io address while `picor.com.ar` still resolves to Apache — two sites, one brand,
+#    no canonical relationship between them. The migration order is in OPEN-03 and it is not
+#    negotiable: enable Pages → verify the github.io copy → move DNS → commit `CNAME` → then this
+#    job becomes the publication origin and the manual upload stops.
+#
+# 3. LIGHTHOUSE RUNS BUT DOES NOT BLOCK (`continue-on-error`). Its floors cannot be met while three
+#    PNGs weigh 25 MB between them; a step that is red from the first day is a step somebody turns
+#    off in a week, which is the failure this whole procedure exists to avoid. It runs so the number
+#    is visible and moves. Recorded as DEBT-05 WITH THE TRIGGER that makes it blocking: the day the
+#    image debt is paid. This is the only non-blocking step here and it is not a suppression — the
+#    check runs, the output is read, and nothing is silenced.
+#
+# 4. NO `lighthouserc.json` FLOORS FILE YET. Autorun uses its defaults until the floors are set with
+#    the same commit that makes step 3 blocking. Part of DEBT-05.
+# ---------------------------------------------------------------------------------------------
+
+name: Delivery gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ------------------------------------------------------------------ the site's own rules
+  # Seconds, no network, no dependencies. These are the rules no general-purpose tool knows about,
+  # which is exactly why §20 says to promote a rule into code when documentation fails to hold it.
+  checks:
+    name: Site rules (§26)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: The vendored checks are unmodified
+        # THE SUBSTITUTE FOR `test-gate.mjs`, WHICH THIS REPOSITORY CANNOT RUN — see INAPPLICABLE-01.
+        #
+        # The template's self-test builds its fixtures by copying the repository around it and
+        # editing the template's placeholder values. In an adopting repository those values are
+        # real, the fixture setup throws, and the test never reaches a check. It tests THE CHECKS,
+        # and the checks are maintained upstream — so its home is the handbook repository, where it
+        # runs against the template on every change.
+        #
+        # What that leaves is the risk it was covering here: a check edited locally to make a
+        # finding go away is a check nobody verified. So the checks are pinned by hash. Editing one
+        # in place fails right here, which makes "never edit them locally" enforceable rather than
+        # aspirational. Re-take them from a released tag and update the manifest with the same
+        # commit that updates .github/handbook-version.md.
+        if: ${{ !cancelled() }}
+        run: sha256sum -c scripts/.vendored.sha256
+
+      - name: One configuration module, no placeholders
+        # NOTE: this site is adopting, so this step is EXPECTED to report findings. The ratchet
+        # below is what decides whether the build fails. Read the findings; they are the debt.
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: node scripts/check-config.mjs
+
+      - name: Indexability and the mobile render rules (§26, §6c)
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: node scripts/check-markup.mjs
+
+      - name: Byte budgets, orphans and third-party origins
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: node scripts/check-assets.mjs
+
+      - name: Nothing new (ratchet)
+        # THIS is the blocking one, and it is the whole mechanism. The three steps above report what
+        # this repository already owed on the day it adopted the standard — carried on purpose, in
+        # `.gate-baseline.json`, so the gate never reports a compliance this site does not have.
+        # This step fails the moment any of those counts RISES.
+        #
+        # `continue-on-error` above is scoped to exactly that: it lets the findings PRINT without
+        # the job going red on the pre-existing ones. It is not a suppression — nothing is disabled,
+        # every finding is emitted, and a new one still fails right here.
+        if: ${{ !cancelled() }}
+        run: node scripts/ratchet.mjs
+
+      - name: No tracked secret or internal material (§4c)
+        # The repository is the web root: a committed file is a published file. This is the last
+        # line, not the mechanism — `.gitignore` is where the decision lives. Blocking from day one,
+        # deliberately: this one has never been about carrying what already exists.
+        if: ${{ !cancelled() }}
+        run: |
+          set -euo pipefail
+          if git ls-files | grep -Ei '\.(ai|psd|sketch|fig|env|pem|key|p12|pfx)$|(^|/)(Branding|drafts|client)/'; then
+            echo "::error::Internal material is tracked, and in this architecture tracked means published (Handbook §26)."
+            exit 1
+          fi
+          echo "OK — nothing internal is tracked."
+
+  # ------------------------------------------------------------------ external tools, pinned
+  # Minutes, and independent of the job above so a finding in `config.js` never hides a regression
+  # here. Both tools are pinned by exact version and fetched with `npx --yes`; bumping one is a
+  # change with a proposal, not a convenience edit — §22 treats CI configuration as privileged.
+  external:
+    name: Links and performance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Serve the site
+        run: |
+          python3 -m http.server 8080 --directory . &
+          for i in $(seq 1 20); do
+            curl -fsS http://127.0.0.1:8080/ >/dev/null && break
+            sleep 0.5
+          done
+          curl -fsS http://127.0.0.1:8080/ >/dev/null
+
+      - name: Links resolve
+        # Blocking. An internal link that 404s is a defect that was always a defect, and in this
+        # architecture it raises nothing at all on the live site.
+        if: ${{ !cancelled() }}
+        run: |
+          npx --yes linkinator@6.1.2 http://127.0.0.1:8080/ \
+            --recurse \
+            --skip '^https?://(?!127\.0\.0\.1)' \
+            --verbosity error
+
+      - name: Mobile performance and accessibility thresholds
+        # NON-BLOCKING, and this is deviation 3 at the top of this file — see DEBT-05 for the reason
+        # and, more importantly, for the trigger that makes it blocking.
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: npx --yes @lhci/cli@0.14.0 autorun --collect.url=http://127.0.0.1:8080/ --upload.target=filesystem
+
+  # ------------------------------------------------------------------ the single required check
+  gate:
+    name: Delivery gate
+    needs: [checks, external]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every check passed
+        run: |
+          set -euo pipefail
+          echo "site rules : ${{ needs.checks.result }}"
+          echo "external   : ${{ needs.external.result }}"
+          if [ "${{ needs.checks.result }}" != "success" ] || [ "${{ needs.external.result }}" != "success" ]; then
+            echo "::error::The gate did not pass. Every failing check is listed in the two jobs above — fix them together rather than one per run."
+            exit 1
+          fi
+          echo "Gate passed — meaning NOTHING NEW was added. It does not mean this site complies; see docs/adoption-baseline.md."
