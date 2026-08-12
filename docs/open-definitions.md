@@ -51,18 +51,30 @@ host again". A reader in a year should find that written here rather than discov
 **The migration order is not negotiable**, because getting it wrong publishes two live copies of the
 site or unbinds the domain:
 
-1. Resolve the plan-or-visibility blocker above.
-2. Enable Pages, publishing from GitHub Actions. **Verify the `github.io` copy renders** before
-   touching DNS.
-3. Verify domain ownership at the **organization** level. §26: verification is what stops another
+1. ~~Resolve the plan-or-visibility blocker.~~ **Done 2026-08-11** — the repository was made
+   public, which is what Pages requires on the free plan. Full history was scanned for credentials
+   first and none were found; nothing had ever been deleted from it either.
+2. ~~Enable Pages, publishing from GitHub Actions.~~ **Done 2026-08-11** — `build_type: workflow`,
+   publishing to `https://makesensedigital.github.io/picor/`.
+3. **Add the publish job and verify the `github.io` copy renders.** Root-absolute paths
+   (`/favicon.ico`, `/privacy.html`, `/site.webmanifest`) will 404 there because a project page is
+   served under `/picor/`. That resolves itself when the custom domain binds and the site is at a
+   root again — it is an artefact of verifying on a subpath, not a defect.
+4. Verify domain ownership at the **organization** level. §26: verification is what stops another
    account claiming the domain.
-4. Move DNS. Confirm the `www` variant is handled — DEBT-09 cannot be fixed after this point.
-5. Commit `CNAME` **in the same change** that adds the publish job. Publishing from a workflow
-   without it unbinds the custom domain silently: the site keeps working on the github.io address
-   and `picor.com.ar` stops resolving.
-6. Only then stop the manual upload.
+5. Move DNS. Confirm the `www` variant is handled — DEBT-09 cannot be fixed after this point,
+   because Pages issues no redirects at all.
+6. Commit `CNAME`. Publishing from a workflow without it unbinds the custom domain silently: the
+   site keeps working on the github.io address and `picor.com.ar` stops resolving.
+7. Only then stop the manual upload.
 
-Steps 3 and 4 are irreversible actions and route to a human under the §22 decision matrix. No agent
+**Correction to the order originally written here (2026-08-11).** The first version said to commit
+`CNAME` *in the same change that adds the publish job*. That is wrong and would have made step 3
+impossible: setting the custom domain makes the github.io address redirect to `picor.com.ar`, which
+still resolves to Apache — so there would be nothing to verify before the switch. `CNAME` goes with
+the DNS move, at step 6.
+
+Steps 4 and 5 are irreversible actions and route to a human under the §22 decision matrix. No agent
 performs them.
 
 ---

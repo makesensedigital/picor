@@ -16,20 +16,22 @@
 # ---------------------------------------------------------------------------------------------
 # DEVIATIONS FROM THE TEMPLATE — all four, with reasons
 #
+# (Deviation 2 was "no publish job" until 2026-08-11. It is now a sequencing note, not an absence.)
+#
 # 1. NO `build-derived.mjs --check` STEP. `facts.js` and the derivation were not adopted: this site
 #    holds its business facts in three independent places (markup, JSON-LD, llms.txt) and migrating
 #    to a single source rewrites `index.html`. Recorded as DEBT-04, not dropped.
 #
-# 2. NO `publish` JOB **YET**, and this is a sequencing decision rather than an open one. The site
-#    is served today by Apache on shared hosting with a manual upload, so §26's "the pipeline is the
-#    publication origin" is UNMET. Moving to GitHub Pages HAS BEEN DECIDED (2026-08-11, Juan
-#    Torresel) — see OPEN-03, which records what that choice puts out of reach.
+# 2. THE PUBLISH JOB TARGETS THE github.io ADDRESS, NOT `picor.com.ar` — yet. OPEN-03 was decided
+#    on 2026-08-11 (Juan Torresel): the publication origin moves from a manual upload to this
+#    workflow. Pages is enabled and the repository was made public to allow it on the free plan.
+#    What remains is the domain: verification at organization level and the DNS move, both of which
+#    are irreversible and belong to a human under §22. Full sequence in the `publish` job below.
 #
-#    The job lands with the migration, not before it. Adding it now would publish a second live copy
-#    at the github.io address while `picor.com.ar` still resolves to Apache — two sites, one brand,
-#    no canonical relationship between them. The migration order is in OPEN-03 and it is not
-#    negotiable: enable Pages → verify the github.io copy → move DNS → commit `CNAME` → then this
-#    job becomes the publication origin and the manual upload stops.
+#    NOTE WHAT THIS COSTS, recorded in OPEN-03 before it was paid: GitHub Pages serves NO custom
+#    response headers and issues NO real redirects. No content security policy, no framing control,
+#    and DEBT-09 (`www` vs apex) becomes unfixable there. The site has none of those today, so
+#    nothing in use is lost — but the option is gone, and a reader in a year should find that here.
 #
 # 3. LIGHTHOUSE RUNS BUT DOES NOT BLOCK (`continue-on-error`). Its floors cannot be met while three
 #    PNGs weigh 25 MB between them; a step that is red from the first day is a step somebody turns
@@ -184,3 +186,69 @@ jobs:
             exit 1
           fi
           echo "Gate passed — meaning NOTHING NEW was added. It does not mean this site complies; see docs/adoption-baseline.md."
+
+  # ------------------------------------------------------------------ publication
+  # OPEN-03, resolved 2026-08-11: the publication origin moves from a manual upload to this
+  # workflow. §26's core requirement for this class — the pipeline publishes, not a branch, and it
+  # publishes only when the gate passes — is met from here.
+  #
+  # WHAT THIS DOES NOT DO YET, AND WHY THAT IS THE RIGHT ORDER.
+  #
+  # There is no CNAME file, so this publishes to https://makesensedigital.github.io/picor/ and NOT
+  # to picor.com.ar, which still resolves to the old Apache host. That is deliberate: the custom
+  # domain must be verified at the organization level and DNS moved by a human (§22 — irreversible,
+  # and the loss on a mistake is the client's domain). Committing CNAME first would point Pages at a
+  # domain that does not resolve here and make the copy below unreachable — so there would be
+  # nothing to verify before the switch.
+  #
+  # EXPECT ROOT-ABSOLUTE PATHS TO 404 ON THAT URL. A project page is served under `/picor/`, and the
+  # site references `/favicon.ico`, `/site.webmanifest` and `/privacy.html` from the root. Those
+  # resolve correctly the moment the custom domain is bound, because then the site IS at the root.
+  # It is an artefact of verifying on a subpath, not a defect to chase.
+  #
+  # THE REMAINING STEPS, ALL HUMAN:
+  #   1. Verify the copy above renders.
+  #   2. Verify domain ownership at the organization level — this is what stops another account
+  #      claiming picor.com.ar.
+  #   3. Move DNS. Confirm the `www` variant is handled (DEBT-09) — after this it cannot be fixed,
+  #      because GitHub Pages issues no real redirects.
+  #   4. Commit CNAME. Then this job binds the domain and the manual upload stops for good.
+  publish:
+    name: Publish
+    needs: gate
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # The domain file must travel with the artifact. Moving the publication origin and omitting it
+      # unbinds the custom domain SILENTLY — the site keeps working on the github.io address and the
+      # client's domain stops resolving (§26). A warning today, because the domain is not bound yet;
+      # once step 4 above is done this is the check that keeps it bound.
+      - name: The domain file travels with the artifact
+        run: |
+          set -euo pipefail
+          if [ -f CNAME ]; then
+            echo "OK — CNAME travels with the artifact: $(cat CNAME)"
+          else
+            echo "::warning::No CNAME. Publishing to the github.io address only — picor.com.ar is still served by the old host. This is expected until the DNS move; see OPEN-03."
+          fi
+
+      - uses: actions/configure-pages@v5
+
+      # The whole repository, which is what the manual upload already published — so this is not a
+      # regression, and narrowing it is DEBT-10 rather than something to slip in here. Note what
+      # that means today: docs/, brief.md and GTM_SETUP.md are served at their URLs.
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - id: deploy
+        uses: actions/deploy-pages@v4

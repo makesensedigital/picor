@@ -17,7 +17,7 @@ running the adoption. None of it has been confirmed by a person.
 | Decision | What was decided | Who | When |
 |---|---|---|---|
 | Canonical domain | `picor.com.ar`, declared in `<link rel="canonical">` and the sitemap | Juan Torresel | before 2026-04 |
-| Hosting, and what it puts out of reach | **Never taken as a decision.** Apache shared hosting at `200.58.111.96`, deploy by manual upload. See OPEN-03 | — | — |
+| Hosting, and what it puts out of reach | **GitHub Pages**, published by this repository's gate. Costs custom headers and real redirects, permanently — see OPEN-03. Migration in progress: repo public and Pages enabled; domain verification and DNS pending | Juan Torresel | 2026-08-11 |
 | Primary conversion | **Never taken.** The site fires `generate_lead` on a departure to WhatsApp, which is an intent recorded as an outcome. See FIX-04 / OPEN-02 | — | — |
 | Copy language and register | Spanish (es-AR), informal *vos*. Consistent throughout, evidently deliberate | Juan Torresel | before 2026-04 |
 
@@ -110,6 +110,8 @@ A reversed conclusion is struck through and explained, never deleted.
 | Initial conclusion | Correction | What triggered it |
 |---|---|---|
 | The site is hosted on GitHub Pages, like the template assumes | It is not. `has_pages: false`, and the live origin answers `Server: Apache` from an Argentine address | Querying the GitHub API and the live site during adoption |
+| `CNAME` should be committed in the same change that adds the publish job | It must go with the DNS move instead. Setting the custom domain makes the github.io address redirect to `picor.com.ar`, which still points at Apache — so committing it early destroys the only chance to verify the new copy before switching | Writing the publish job and realising step 3 had no way to run |
+| Hosting was "never decided" and blocked | **Decided 2026-08-11 by Juan Torresel: GitHub Pages.** The repository was made public to allow it on the free plan. What it forecloses — custom headers and real redirects, permanently — is recorded in OPEN-03 | Instruction during the adoption session |
 
 ---
 
