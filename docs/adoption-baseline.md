@@ -145,9 +145,13 @@ later becomes an argument.
 |---|---|---|---|
 | **Fix now** | 4 | 6 | Fixed during this adoption — see below and the commits that follow |
 | **Debt** | 14 | 49 | [`technical-debt.md`](technical-debt.md) — each with a reason, a cost, **a trigger** and an owner |
-| **Inapplicable** | 3 | 6 | [`open-definitions.md`](open-definitions.md) — with the reason, never silently skipped |
+| **Inapplicable** | 4 | 6 | [`open-definitions.md`](open-definitions.md) — with the reason, never silently skipped |
 | **Blocked on a decision** | 4 | 5 | [`open-definitions.md`](open-definitions.md) — with the default that holds while open |
-| | **25** | **66** | |
+| | **26** | **66** | |
+
+Three of the four *inapplicable* entries carry no findings of their own: they record rules that do
+not reach this repository (§20's five stages, the template's self-test) or a defect in the
+instrument. Only INAPP-03 accounts for findings — the six byte coincidences inside PNGs.
 
 ### The fix-now bucket, and why only these four
 
