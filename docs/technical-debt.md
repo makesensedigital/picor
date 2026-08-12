@@ -29,11 +29,8 @@ was a mistake when it was written: the rules arrived four months after the site 
 | # | What is wrong | Findings | Why it was accepted | Cost of leaving it | Trigger to fix | Owner | Since |
 |---|---|---|---|---|---|---|---|
 | **DEBT-01** | **External identifiers are literals in the markup, not references to `config.js`.** The WhatsApp number appears 7×, the mailbox once, the tag container id once | 9 | Wiring them means introducing `site.js` and rewriting every control's `href` in a 1168-line document that has no tests. `config.js` now declares them, so the duplication is at least visible | A number change is 9 edits. By the third, one is missed — and a wrong number on one of nine buttons looks exactly like a right one | The next time any of these values changes, or when DEBT-11 rewrites the markup anyway — whichever is first | Juan Torresel | 2026-08-11 |
-| **DEBT-02** | **31.58 MB of referenced weight on `index.html`**, against a 2 MB budget. 11 images over the 300 KB per-image budget; 5 photographs stored in a lossless format. `education-comparativa.png` alone is 9.4 MB | 17 | Re-encoding is mechanical but touches 11 binary assets and needs a visual check on each. It is the single largest item here and the most obviously worth doing | This is availability, not only speed: on a metered host it exhausts a transfer allowance in a few thousand visits, and on mobile data it is a page most visitors never see finish. It is also why the performance floors cannot be turned on (DEBT-14) | Immediately after FIX-01 lands. This is the top of the queue — it is the cheapest large win on the site | Juan Torresel | 2026-08-11 |
-| **DEBT-03** | **`flyer-b2b.html` references 4 images that are not in the repository** — `campo-surcos.jpeg`, `logo-pepper.svg`, `producto-detalle.jpeg`, `sin-tacc-logo.jpg`. Two further images are committed and referenced from nowhere | 6 | Not carried because it is hard — carried because **it is not yet known whether the flyer is still in use**, and deleting a page somebody hands to prospects is worse than leaving it broken for another week. See the assumption in `brief.md` | The flyer is a B2B page sent directly to prospects and it renders with four broken images today. In this architecture a 404 raises nothing anywhere | Juan confirms whether the flyer is still sent. If yes, fix the four references; if no, delete the page. **Either answer closes this** | Juan Torresel | 2026-08-11 |
 | **DEBT-04** | **Google Fonts is contacted on first render**, from `fonts.googleapis.com` and `fonts.gstatic.com`, before any consent choice exists | 3 | Self-hosting the typefaces is the right fix and needs the font files, a `@font-face` block and a visual check. It is an hour, not a minute | Every visitor's address reaches a third party before they choose anything, and with no server there is nothing to proxy it through. It also blocks first render on a second origin | With OPEN-01 (the consent decision) — the two are the same conversation. **Do not close this by adding the origins to the allowlist**; that converts a finding into a decision nobody took | Juan Torresel | 2026-08-11 |
 | **DEBT-05** | **No skip link on either document.** A keyboard user tabs the entire navigation on every page | 2 | §6c is explicitly not suspended for this class, so this is a real violation. It is cheap — an anchor and a CSS rule — but it is an access barrier rather than an open hole, so it is not contract-sensitive and it is not in the fix-now bucket | A keyboard-only visitor cannot reach the content without tabbing through the whole nav; on the contact page that is the conversion path | With the next change to either document's `<body>`, whichever comes first | Juan Torresel | 2026-08-11 |
-| **DEBT-06** | **Images declare no intrinsic `width`/`height`**, so the page shifts as they load | 2 | It is one attribute pair per `<img>` across two documents, but the correct values have to be read off each asset — and DEBT-02 is about to change every one of those assets | Cumulative layout shift on every visit, worst on the slow connections that already suffer most from DEBT-02 | **Do this inside DEBT-02.** Re-encoding the images is when the final dimensions are known; doing it before means doing it twice | Juan Torresel | 2026-08-11 |
 | **DEBT-07** | **Three of the four mobile render rules are broken in `style.css`**: a full-height rule uses `vh` instead of `dvh`; an element fixed to the bottom edge ignores the safe area; form controls are set to 15.2px and 14.4px, below the 16px no-zoom floor; no minimum interactive target size is declared | 5 | Each is a small change to a 2489-line stylesheet with no visual regression test. Together they need a pass on a real handset, which is also what §26 requires and what has never been done here | Every one of these fails only on a phone, which is where this traffic is. The sticky WhatsApp button sits under the gesture bar; the form zooms on focus and throws the visitor out of position mid-form | The first real-device pass — which is a listed pre-publication item in `brief.md` that has never been performed. Bundle all five | Juan Torresel | 2026-08-11 |
 | **DEBT-08** | **`analytics.js` holds a literal container id and a placeholder sentinel.** The file compares against the template placeholder string in order to detect an unconfigured container, so the check reports it | 2 | Two ways to close this and the cheap one is wrong. A one-line scoped `check-config: allow` comment would silence it honestly, but the file is being **replaced** anyway: it has no consent default and no intent/outcome split, both of which OPEN-01 and the fix-now bucket already require | Nothing on its own. This entry exists so the two findings in the baseline are not mistaken for something unexplained | With OPEN-01, when `analytics.js` is replaced by the template's — which loads the consent default *before* the container. Closing it earlier with a suppression is allowed but wasted | Juan Torresel | 2026-08-11 |
 | **DEBT-09** | **`www.picor.com.ar` and `picor.com.ar` both serve 200** with no redirect between them — two origins, one site | 1 | Fixing it needs a redirect, which the current host can do via `.htaccess` and the decided host (GitHub Pages) **cannot do at all**. Doing it now means doing it twice, and doing it the second way may not be possible | Split signals between two origins. The `<link rel="canonical">` points at the apex, which is what limits the damage today | With OPEN-03, in the migration. **Verify before migrating** that the chosen host handles the `www` variant, because this one cannot be fixed afterwards | Juan Torresel | 2026-08-11 |
@@ -43,7 +40,8 @@ was a mistake when it was written: the rules arrived four months after the site 
 | **DEBT-13** | **Four of the six WhatsApp controls compose no message.** They open an empty conversation, so the business receives a message with no context at all | 0 (gate cannot see it) | The message templates now exist in `config.messages`, but wiring them is the same markup rewrite as DEBT-01 | The composed text is the **entire** context the business receives. An empty conversation from an unknown number is a lead that has to be re-qualified from zero, and some fraction never are | With DEBT-01 — same edit, same lines | Juan Torresel | 2026-08-11 |
 | **DEBT-14** | **The performance and accessibility floors do not block the gate**, and no `lighthouserc.json` floors file exists. The step runs and reports; it cannot fail the build | 0 (gate configuration) | Any real floor fails today because of DEBT-02, and a step that is red from day one is a step somebody switches off within a week — which is the failure this whole procedure exists to avoid. It runs so the number is visible and moves | The floors are advisory, so a regression between now and DEBT-02 would not be caught. This is the one place the gate is weaker than the template's | **DEBT-02 landing.** That is the trigger, it is specific, and the same commit that re-encodes the images sets the floors and removes `continue-on-error` | Juan Torresel | 2026-08-11 |
 
-**Total: 14 entries, 48 of the 66 baseline findings** — one was paid down on 2026-08-11, see below.
+**Open: 11 entries, 22 findings.** Four entries were paid down on 2026-08-11/12 — see below. The
+baseline fell from 53 machine-visible findings to 22.
 
 ---
 
@@ -53,6 +51,9 @@ An entry moves here rather than being deleted, so the reasoning survives its res
 
 | # | What it was | How it was resolved | Closed |
 |---|---|---|---|
+| **DEBT-02** | **31.58 MB of referenced weight on `index.html`** against a 2 MB budget; 11 images over the per-image budget, 5 photographs stored losslessly, one PNG at 9.4 MB | Every photograph re-encoded to **WebP** at the size it is actually displayed. `index.html` went from **31.58 MB to under 2 MB**; the `images/` directory from **32 MB to 1.9 MB**. Quality was tuned per file by searching downward for the highest setting that fit, not by pinning everything to one number — and the first two passes were thrown away, see the note below | 2026-08-12 |
+| **DEBT-03** | **`flyer-b2b.html` referenced 4 images that were not in the repository**, so it rendered broken for every prospect it was sent to. Two further images were committed and referenced from nowhere | Juan confirmed the flyer is still in use. Each of the four was replaced with the asset its own markup unambiguously described, and `index.html` already used the same four in the same roles. The two orphans were byte-identical duplicates of one placeholder — `md5 8c29683a…` for both — and were deleted | 2026-08-12 |
+| **DEBT-06** | **Images declared no intrinsic `width`/`height`**, so the page reflowed as each one arrived | Added to all 27 `<img>` across `index.html` and `flyer-b2b.html`, taken from the re-encoded files. Done inside DEBT-02 exactly as this register said to: the final dimensions are only knowable once the images are final, and doing it earlier means doing it twice | 2026-08-12 |
 | **DEBT-10a** | **No published not-found document.** A wrong URL returned Apache's default error page — a dead end with no route back to the site | `404.html` added, served automatically by GitHub Pages from the root. Self-contained: its styles are inline rather than in `style.css`, because a page that reports a failure must not depend on another file that can fail the same way. `noindex`, and out of the sitemap | 2026-08-11 |
 
 ---
@@ -67,3 +68,34 @@ An entry moves here rather than being deleted, so the reasoning survives its res
 - **An entry with no trigger.** Debt with no condition for repayment is a decision nobody wants to
   defend.
 - **Anything contract-sensitive.** See the bucket test at the top of this file.
+
+---
+
+## A note on DEBT-02, because the first two attempts were wrong
+
+Worth keeping, because the failure was invisible in the numbers.
+
+**Pass one — JPEG at the byte target.** It hit 1.9 MB and looked like a success. But almost every
+file had bottomed out at the quality floor with 4:2:0 chroma subsampling, which averages colour over
+2×2 blocks. On this subject — saturated red gochugaru on neutral ground — that is precisely where
+JPEG smears. The byte count said the work was done; the images would have shipped visibly degraded.
+
+**Pass two — JPEG at 4:2:2 and a higher floor.** Better colour, but still pinned at the floor and
+still 2.07 MB, over budget. Crushing quality further to buy bytes is the same mistake again.
+
+**Pass three — WebP.** The same visual quality for roughly 30% fewer bytes, which bought the
+headroom to encode at quality 76–88 instead of at the floor. This is what shipped.
+
+**Two things fell out of it that are decisions, not side effects:**
+
+- **`og:image` and `twitter:image` are deliberately NOT WebP.** They point at `social-card.jpg`, a
+  JPEG cropped to the 1.91:1 both platforms use. This site's traffic arrives through WhatsApp and
+  Instagram, and their preview scrapers do not reliably render WebP — a broken preview card on the
+  channel the visitors come from would have been a worse outcome than a heavier file.
+- **No `<picture>` JPEG fallback.** WebP is served directly as `src`. The check's remediation text
+  suggests a fallback, and this deliberately does not have one: it would double the asset count on a
+  site whose central problem is that things live in too many places, and the per-document budget
+  does not count `srcset`, so a fallback arrangement would have *understated* the real weight. WebP
+  has been supported by every shipping browser since 2020, including the in-app browsers this
+  traffic uses. **The residual risk is a browser older than that seeing no image at all** — accepted
+  knowingly, recorded here rather than discovered.
