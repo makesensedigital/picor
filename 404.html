@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Página no encontrada — Picor</title>
+  <meta name="robots" content="noindex, follow">
+  <link rel="icon" type="image/svg+xml" href="/images/ui-favicon.svg">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <meta name="theme-color" content="#C62828">
+
+  <!-- Los estilos van EN LÍNEA, y no es descuido.
+       Esta página se sirve en cualquier ruta que no exista, a cualquier profundidad. Si dependiera
+       de /style.css y esa hoja no cargara — otro 404, la caché del borde, un dominio a medio
+       migrar — el visitante recibiría texto sin formato en el único momento en que ya algo salió
+       mal. Una página de error que depende de otro archivo tiene el mismo modo de falla que la
+       falla que está reportando. Handbook §26. -->
+  <style>
+    :root { --rojo: #C62828; --tinta: #1a1a1a; --papel: #fffaf5; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+      background: var(--papel);
+      color: var(--tinta);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      text-align: center;
+    }
+    main { max-width: 34rem; }
+    .chile { font-size: 3.5rem; line-height: 1; margin-bottom: 1rem; }
+    h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 0.75rem; }
+    p { margin: 0 0 1.25rem; font-size: 1.05rem; }
+    .acciones { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; margin-top: 1.75rem; }
+    a.btn {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 0.7rem 1.4rem;
+      border-radius: 999px;
+      font-weight: 600;
+      text-decoration: none;
+      background: var(--rojo);
+      color: #fff;
+    }
+    a.btn--sec { background: transparent; color: var(--tinta); border: 2px solid rgba(0,0,0,0.15); }
+    a.btn:focus-visible { outline: 3px solid var(--rojo); outline-offset: 3px; }
+    .skip-link { position: absolute; left: -9999px; }
+    .skip-link:focus { left: 0; top: 0; padding: 0.75rem 1.25rem; background: var(--rojo); color: #fff; }
+    @media (prefers-color-scheme: dark) {
+      :root { --tinta: #f2ece6; --papel: #16110f; }
+      a.btn--sec { border-color: rgba(255,255,255,0.2); }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+
+  <main id="main">
+    <div class="chile" aria-hidden="true">🌶️</div>
+    <h1>Esta página no existe</h1>
+    <p>
+      El enlace que seguiste está roto o la página se movió. No es culpa tuya.
+    </p>
+    <p>
+      Si llegaste buscando el gochugaru, los formatos o la ficha técnica, está todo en el inicio.
+    </p>
+    <div class="acciones">
+      <a class="btn" href="/">Ir al inicio</a>
+      <a class="btn btn--sec" href="/privacy.html">Política de Privacidad</a>
+    </div>
+  </main>
+</body>
+</html>
