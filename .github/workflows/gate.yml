@@ -178,8 +178,17 @@ jobs:
         # which direction the number is moving.
         if: ${{ !cancelled() }}
         run: |
+          # NOT `set -e`, and NOT for the usual reason. The scores must print whether the
+          # assertions passed or failed - a gate that goes red without saying which number moved is
+          # the report-that-stops-at-the-first-line problem again. So the exit code is captured,
+          # the summary always runs, and the status is re-raised at the end.
+          #
+          # This step could not fail at all until 2026-08-12: it ran `set -uo pipefail` with no
+          # `-e`, so npx's non-zero exit was discarded and the last command decided the step. It
+          # looked blocking and was not, which is worse than being openly advisory.
           set -uo pipefail
           npx --yes @lhci/cli@0.14.0 autorun
+          status=$?
           node -e '
             const fs = require("fs");
             const dir = ".lighthouseci";
@@ -203,6 +212,7 @@ jobs:
             console.log("  Floors are in lighthouserc.json, with the reason for each.");
             console.log("");
           '
+          exit $status
 
       - name: Keep the Lighthouse report
         # So the numbers outlive the log and can be compared run to run.

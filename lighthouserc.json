@@ -1,8 +1,20 @@
 {
   "//": "Handbook §26 delivery gate, point 3: numeric floors for mobile performance and accessibility. A threshold with no job that runs it produces the same software as no threshold, so these are merge conditions rather than aspirations.",
-  "//measured": "Set on 2026-08-12 from the median of three CI runs, not guessed: performance 64, accessibility 97, best-practices 100, SEO 100, LCP 6.8s, CLS 0, TBT 10ms.",
-  "//headroom": "Each floor sits below the measured score by about the run-to-run variance Lighthouse shows on a shared runner. A floor set flush against today's number goes red on noise, and a gate that cries wolf is a gate somebody removes - which is the failure this whole adoption is written against. Raise them as the scores improve; that is the ratchet idea applied to a number instead of a count.",
-  "//performance": "0.55 against a measured 64 is the loosest floor here, and deliberately so: LCP is 6.8s and the largest remaining cause is the render-blocking Google Fonts stylesheet on a third-party origin. That is DEBT-04, which is also a privacy finding - the same fix moves both. Tighten this to 0.75 in the commit that self-hosts the typefaces.",
+
+  "//measured": "Set 2026-08-12 from the median of three CI runs, not guessed: performance 64, accessibility 97, best-practices 100, SEO 100, LCP 6.8s, CLS 0, TBT 10ms.",
+
+  "//headroom": "Each floor sits below its measured score by roughly the run-to-run variance Lighthouse shows on a shared runner. A floor set flush against today's number goes red on noise, and a gate that cries wolf is a gate somebody removes - the failure this whole adoption is written against. Raise them as the scores improve: the ratchet idea applied to a number instead of a count.",
+
+  "//on-performance": "0.55 against a measured 64 is the loosest floor here, deliberately. LCP is 6.8s and the largest remaining cause is the render-blocking Google Fonts stylesheet on a third-party origin - DEBT-04, which is also a privacy finding, so the same commit fixes both. Tighten this to 0.75 when it lands.",
+
+  "//on-layout-shift": "Measured 0 after width/height landed on all 27 images. Asserted at 0.1 to lock it in: it is the one metric here that is currently perfect and the easiest to lose by accident.",
+
+  "//on-blocking-time": "Measured 10ms. 500 is generous on purpose - the point is catching a script that starts blocking the main thread, not policing normal variation.",
+
+  "//on-lcp": "Warning rather than error, and this is the honest place for it. At 6.8s it fails any floor worth setting, so asserting on it would make the gate permanently red - the exact failure the ratchet prevents everywhere else here. It warns so the number stays in view, and it becomes an error when DEBT-04 removes the render-blocking third-party stylesheet.",
+
+  "//no-comments-below": "Every key inside `assertions` is read by LHCI as an AUDIT NAME. A `//` comment there is asserted as an audit that does not exist and fails with 'auditRan'. That happened here on 2026-08-12; the commentary lives at this level instead, where LHCI does not look.",
+
   "ci": {
     "collect": {
       "url": ["http://127.0.0.1:8080/"],
@@ -14,14 +26,8 @@
         "categories:accessibility": ["error", { "minScore": 0.95 }],
         "categories:best-practices": ["error", { "minScore": 0.95 }],
         "categories:seo": ["error", { "minScore": 0.95 }],
-
-        "//layout-shift": "Measured 0 after width/height landed on all 27 images. This locks that in: it is the one metric here that is currently perfect and the easiest to lose by accident.",
         "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
-
-        "//blocking": "Measured 10ms. 500 is generous, because the point is catching a script that starts blocking the main thread, not policing normal variation.",
         "total-blocking-time": ["error", { "maxNumericValue": 500 }],
-
-        "//lcp": "Warning rather than error, and this is the honest place for it. 6.8s fails any reasonable floor already, so asserting on it would make the gate permanently red - the exact thing the ratchet exists to prevent elsewhere. It warns so the number stays in view, and it becomes an error when DEBT-04 removes the render-blocking third-party stylesheet.",
         "largest-contentful-paint": ["warn", { "maxNumericValue": 4000 }]
       }
     },
