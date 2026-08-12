@@ -40,8 +40,9 @@
 #    image debt is paid. This is the only non-blocking step here and it is not a suppression — the
 #    check runs, the output is read, and nothing is silenced.
 #
-# 4. NO `lighthouserc.json` FLOORS FILE YET. Autorun uses its defaults until the floors are set with
-#    the same commit that makes step 3 blocking. Part of DEBT-05.
+# 4. NO `lighthouserc.json` FLOORS FILE YET. Autorun uses its defaults until the floors are set
+#    with the same commit that makes step 3 blocking. Part of DEBT-14, whose trigger has now
+#    fired - so the step prints its scores, and the floors come from a measurement.
 # ---------------------------------------------------------------------------------------------
 
 name: Delivery gate
@@ -163,11 +164,55 @@ jobs:
             --verbosity error
 
       - name: Mobile performance and accessibility thresholds
-        # NON-BLOCKING, and this is deviation 3 at the top of this file — see DEBT-05 for the reason
-        # and, more importantly, for the trigger that makes it blocking.
+        # STILL NON-BLOCKING - deviation 3 at the top of this file - but no longer silent.
+        #
+        # It used to run with --upload.target=filesystem and print nothing beyond "Done running
+        # autorun". That is worse than useless: a number nobody can see cannot move, and a step
+        # that produces one looks like coverage while providing none.
+        #
+        # DEBT-14's trigger (the image work landing) has now fired, so the floors are next. They
+        # get set from a MEASURED score rather than a guessed one, which means the first job is
+        # making the score visible. Read it from this step's output, put the floors just under it
+        # in lighthouserc.json, and delete the continue-on-error below in the same commit.
         if: ${{ !cancelled() }}
         continue-on-error: true
-        run: npx --yes @lhci/cli@0.14.0 autorun --collect.url=http://127.0.0.1:8080/ --upload.target=filesystem
+        run: |
+          set -uo pipefail
+          npx --yes @lhci/cli@0.14.0 autorun --collect.url=http://127.0.0.1:8080/ --upload.target=filesystem
+          node -e '
+            const fs = require("fs");
+            const dir = ".lighthouseci";
+            if (!fs.existsSync(dir)) { console.log("no lighthouse output"); process.exit(0); }
+            const runs = fs.readdirSync(dir).filter(f => f.startsWith("lhr-") && f.endsWith(".json"));
+            if (!runs.length) { console.log("no lighthouse report found"); process.exit(0); }
+            const all = runs.map(f => JSON.parse(fs.readFileSync(dir + "/" + f, "utf8")))
+              .sort((a, b) => a.categories.performance.score - b.categories.performance.score);
+            const r = all[Math.floor(all.length / 2)];
+            console.log("");
+            console.log("=== Lighthouse mobile, median of " + runs.length + " runs ===");
+            for (const c of Object.values(r.categories)) {
+              console.log("  " + c.title.padEnd(20) + Math.round(c.score * 100));
+            }
+            console.log("");
+            for (const k of ["largest-contentful-paint", "cumulative-layout-shift", "total-blocking-time", "speed-index"]) {
+              const a = r.audits[k];
+              if (a) console.log("  " + k.padEnd(28) + a.displayValue);
+            }
+            console.log("");
+            console.log("  DEBT-14: set lighthouserc.json floors just under these, then remove");
+            console.log("  continue-on-error from this step, in the same commit.");
+            console.log("");
+          '
+
+      - name: Keep the Lighthouse report
+        # So the numbers outlive the log and can be compared run to run.
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: .lighthouseci/
+          retention-days: 30
 
   # ------------------------------------------------------------------ the single required check
   gate:
