@@ -112,7 +112,14 @@ const localise = (raw) => {
   return raw.replace(/^\.?\//, "");
 };
 
-for (const file of files.filter((f) => /\.(js|json|webmanifest|xml|txt|html)$/.test(f))) {
+// LOCAL DEVIATION FROM handbook v3.7.1 — see .github/handbook-version.md and INAPP-04.
+// `.gate-baseline.json` is the ratchet's OWN artifact, not site content. Its keys embed asset paths
+// ("check-assets|images/hero-fondo.png"), and reading them as references makes every recorded
+// finding reappear as "referenced but not committed" on the next run — so `ratchet.mjs --init`
+// writes a file that guarantees the very next run of this check fails, on any site whose findings
+// mention an asset. `walk()` already skips `scripts/` and `.github/` because they are gate
+// machinery; this file is gate machinery that happens to live at the scanned root.
+for (const file of files.filter((f) => /\.(js|json|webmanifest|xml|txt|html)$/.test(f) && !f.endsWith(".gate-baseline.json"))) {
   const text = await read(file);
   for (const m of text.matchAll(REFERENCE)) {
     const target = localise(m[1]);

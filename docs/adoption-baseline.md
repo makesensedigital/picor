@@ -136,23 +136,41 @@ The entries record the **gap in the history**, not a plan to fill it.
 
 ---
 
-## 3. Next — triage
+## 3. Triage — where every finding went
 
-**This document stops at the measurement, on purpose.** The 66 findings above are not yet sorted,
-and sorting them is a separate act recorded in a separate commit, so that the history shows what was
-*found* apart from what was *decided about it*.
+Every one of the 66 findings is in **exactly one** bucket. A finding with no bucket is the one that
+later becomes an argument.
 
-Every one of them then goes into **exactly one** of four buckets — fix now, debt, inapplicable, or
-blocked on a decision. A finding with no bucket is the one that later becomes an argument.
+| Bucket | Entries | Findings | Where it lives |
+|---|---|---|---|
+| **Fix now** | 4 | 6 | Fixed during this adoption — see below and the commits that follow |
+| **Debt** | 14 | 49 | [`technical-debt.md`](technical-debt.md) — each with a reason, a cost, **a trigger** and an owner |
+| **Inapplicable** | 3 | 6 | [`open-definitions.md`](open-definitions.md) — with the reason, never silently skipped |
+| **Blocked on a decision** | 4 | 5 | [`open-definitions.md`](open-definitions.md) — with the default that holds while open |
+| | **25** | **66** | |
 
-- [`technical-debt.md`](technical-debt.md) — a real violation, expensive to fix, safe to carry
-  meanwhile. Each entry carries a reason, a cost, **a trigger** and an owner. Without a trigger it is
-  a complaint; without an owner it is nobody's.
-- [`open-definitions.md`](open-definitions.md) — the rules recorded as **inapplicable** with the
-  reason, and the ones **blocked on a decision** with the default that holds while they are open.
+### The fix-now bucket, and why only these four
 
-**Adopted does not mean zero violations.** That definition guarantees no repository is ever adopted.
-It means every violation is in one of those four buckets and the ratchet holds.
+The test is **contract-sensitive and cheap** — not "small". These are defects that were always
+defects; the rule only made them visible. Carrying one is not a slower fix, it is an open hole.
+
+| # | What | Why it is not debt |
+|---|---|---|
+| **FIX-01** | The TLS certificate expired 2026-07-09; plain HTTP is served with no redirect | The site is *effectively down* for any visitor who heeds the browser warning, and has been for 33 days. Nothing else on this list matters while this is true |
+| **FIX-02** | No privacy statement, while the form collects name, email, telephone and free text | A disclosure obligation does not wait for a consent decision. §26: a privacy statement is required **in every case**, regardless of what was decided about tracking |
+| **FIX-03** | The form's success state is shown whether or not the handoff happened | It tells the visitor they are done and tells the business nothing. §26: *a confirmation for an unsent message is worse than no confirmation.* In an in-app browser — where much of this traffic arrives — `window.open` is exactly what fails |
+| **FIX-04** | `generate_lead` fires on the departure to WhatsApp | Measurement is irreversible. Every day it stays, more history is recorded under a name that overstates it, and none of it can be recomputed later. "Later" costs strictly more here, which is the fix-now test |
+
+**Deliberately not in this bucket, though it is cheap:** the missing skip link (DEBT-05). It is a
+real §6c violation and takes two lines, but it is an access barrier rather than an open hole — the
+bucket test is contract-sensitive **and** cheap, and cheapness alone does not qualify. Putting it
+here would widen the bucket until it means "everything easy", which is how the rewrite nobody funds
+begins.
+
+**FIX-01 is not repairable from this repository.** It is a hosting action — renewing a certificate
+and adding a redirect on the current host, or completing the migration recorded in OPEN-03. It is
+recorded here as fix-now because that is the bucket it belongs in, and it is escalated to its owner
+rather than quietly downgraded to debt because nobody with the access was in the room.
 
 ## What to be suspicious of
 
